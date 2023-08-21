@@ -44,10 +44,14 @@ class Entity:
 
     # builtin
     def add_tag(self, tag:str):
-        if tag in self.scene.tags: self.scene.tags[tag].append(self)
+        if tag in self.scene.tags:
+            self.scene.tags[tag].append(self)
+            self.tags.append(tag)
 
     def remove_tag(self, tag:str):
-        if tag in self.scene.tags and self in self.scene.tags[tag]: self.scene.tags[tag].append(self)
+        if tag in self.scene.tags and self in self.scene.tags[tag]:
+            self.scene.tags[tag].remove(self)
+            self.tags.remove(tag)
 
     def has_tag(self, tag:str):
         return tag in self.tags
@@ -59,6 +63,7 @@ class Entity:
         return comp
     
     def destroy(self):
+        for tag in list(self.tags): self.remove_tag(rag)
         for comp in list(self.components.values()): comp.on_destroy()
         for layer in list(self.layers.values()):
             layer.remove(self)
