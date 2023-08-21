@@ -6,10 +6,16 @@ from ..extension.system import System
 import pygame, sys
 import pygame._sdl2 as pgsdl
 
-class Application:
 
+class Application:
     @classmethod
-    def init(cls, sdl_window:pgsdl.Window, target_fps:int=0, accelerated=True, input_elasticity=1.5):
+    def init(
+        cls,
+        sdl_window: pgsdl.Window,
+        target_fps: int = 0,
+        accelerated: bool = True,
+        input_elasticity: float = 1.5,
+    ):
         System._init()
         Window._init(sdl_window, accelerated)
         Time._init(target_fps)

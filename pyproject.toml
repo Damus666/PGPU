@@ -1,0 +1,29 @@
+[project]
+name = "pgpu"
+description = "Pygame GPU Accelerated Engine"
+version = "0.0.1"
+readme = "README.md"
+
+authors = [
+    { name="Damus666", email="macchia.cuordileone@gmail.com" }
+]
+
+dependencies = [
+    "pygame-ce>=2.3.1"
+]
+
+[project.scripts]
+
+[project.urls]
+homepage = "https://github.com/Damus666/PGPU"
+bugtracker = "https://github.com/Damus666/PGPU/issues"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "-rA -s"
+testpaths = [
+    "tests",
+]

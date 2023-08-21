@@ -1,12 +1,14 @@
 import pygame
 
+
 class classproperty(property):
     def __get__(self, obj, obj_type=None):
         return self.fget(obj_type)
-    
+
     def __set__(self, obj, value, obj_type=None):
-        self.fset(obj_type,value)
-    
+        self.fset(obj_type, value)
+
+
 _pygame_key_codes = [
     pygame.K_BACKSPACE,
     pygame.K_RETURN,
@@ -105,5 +107,5 @@ _pygame_key_codes = [
     pygame.K_RCTRL,
     pygame.K_LCTRL,
     pygame.K_RALT,
-    pygame.K_LALT
+    pygame.K_LALT,
 ]
