@@ -63,7 +63,7 @@ class Entity:
         return comp
     
     def destroy(self):
-        for tag in list(self.tags): self.remove_tag(rag)
+        for tag in list(self.tags): self.remove_tag(tag)
         for comp in list(self.components.values()): comp.on_destroy()
         for layer in list(self.layers.values()):
             layer.remove(self)
