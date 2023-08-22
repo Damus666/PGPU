@@ -130,8 +130,14 @@ class Entity:
     def destroy(self):
         for tag in list(self.tags):
             self.remove_tag(tag)
-        for comp in list(self._components.values()):
-            comp.on_destroy()
+        for single, multiple in list(self._components.values()):
+            if single is not None:
+                single.on_destroy()
+                single.destroy()
+            else:
+                for comp in multiple:
+                    comp.on_destroy()
+                    comp.destroy()
         for layer in list(self.layers.values()):
             layer.remove(self)
 
