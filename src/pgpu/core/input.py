@@ -49,11 +49,12 @@ class Input:
     mouse_focused: bool = True
     any_key: bool = False
     any_mouse: bool = False
+    default_elasticity: float = 1
+
     _axis: dict[str, InputAxis] = {}
     _key_data: dict[int, int] = dict()
     _mouse_data: dict[int, int] = dict()
     _actions: dict[str, list[int]] = dict()
-    default_elasticity: float = 1
 
     @classmethod
     def _init(cls, default_elasticity):

@@ -35,20 +35,22 @@ class Entity:
         self.name: str = self.__class__.__name__
         # texture
         self.texture: pgsdl.Texture | None = texture
+        # box
+        self.box = pygame.Rect(0, 0, 0, 0)
         # tags
         self.tags: list[str] = []
         tags = tags if tags is not None else []
         for tag in tags:
             self.add_tag(tag)
         # components
-        self.components: dict[str, list[Component | None, list[Component]]] = {}
+        self._components: dict[str, list[Component | None, list[Component]]] = {}
         for comp in self.start_components:
             if isinstance(comp, list):
                 comp_name, comp_type = comp
             else:
                 comp_name, comp_type = comp.__name__, comp
             self.add_component(comp_type, comp_name, False)
-        for single, multiple in list(self.components.values()):
+        for single, multiple in list(self._components.values()):
             if single is not None:
                 single.init()
             else:
@@ -94,40 +96,41 @@ class Entity:
         if name is None:
             name = component_type.__name__
 
-        if name in self.components:
-            if self.components[name][0] is not None:
-                self.components[name][1].append(self.components[name][0])
-            self.components[name][1].append(comp)
-            self.components[name][0] = None
+        if name in self._components:
+            if self._components[name][0] is not None:
+                self._components[name][1].append(self._components[name][0])
+            self._components[name][1].append(comp)
+            self._components[name][0] = None
         else:
-            self.components[name] = [comp, []]
+            self._components[name] = [comp, []]
 
         if init_component:
             comp.init()
         return comp
 
     def get_component(self, name: str):
-        if name in self.components:
-            if self.components[name][0] is not None:
-                return self.components[name][0]
+        if name in self._components:
+            if self._components[name][0] is not None:
+                return self._components[name][0]
             else:
-                return self.components[name][1][0]
+                return self._components[name][1][0]
         return None
 
     def get_components(self, name: str):
-        if name in self.components:
-            if len(self.components[name][1]) > 1:
-                return self.components[name][1]
-            else: return [self.components[name][0]]
+        if name in self._components:
+            if len(self._components[name][1]) > 1:
+                return self._components[name][1]
+            else:
+                return [self._components[name][0]]
         return None
-    
-    def has_component(self, name:str):
-        return name in self.components
+
+    def has_component(self, name: str):
+        return name in self._components
 
     def destroy(self):
         for tag in list(self.tags):
             self.remove_tag(tag)
-        for comp in list(self.components.values()):
+        for comp in list(self._components.values()):
             comp.on_destroy()
         for layer in list(self.layers.values()):
             layer.remove(self)
@@ -138,7 +141,7 @@ class Entity:
         return cls(Transform(), [], None)
 
     def render(self):
-        for single, multiple in list(self.components.values()):
+        for single, multiple in list(self._components.values()):
             if single is not None:
                 single.render()
             else:
@@ -149,7 +152,16 @@ class Entity:
         ...
 
     def update(self):
-        for single, multiple in list(self.components.values()):
+        self.box.center = self.transform.position
+        self.box.size = (
+            (
+                self.texture.width * self.transform.scale.x,
+                self.texture.height * self.transform.scale.y,
+            )
+            if self.texture is not None
+            else self.box.size
+        )
+        for single, multiple in list(self._components.values()):
             if single is not None:
                 single.update()
             else:
@@ -157,7 +169,7 @@ class Entity:
                     comp.update()
 
     def event(self, event: pygame.event.Event):
-        for single, multiple in list(self.components.values()):
+        for single, multiple in list(self._components.values()):
             if single is not None:
                 single.event(event)
             else:
@@ -165,7 +177,7 @@ class Entity:
                     comp.event(event)
 
     def on_quit(self):
-        for single, multiple in list(self.components.values()):
+        for single, multiple in list(self._components.values()):
             if single is not None:
                 single.on_quit()
             else:
@@ -174,9 +186,18 @@ class Entity:
 
 
 class Layer:
-    def __init__(self, name: str):
+    def __init__(
+        self,
+        name: str,
+        is_main: bool = False,
+        is_visible: bool = False,
+        is_other: bool = False,
+    ):
         self.name: str = name
         self.entities: list[Entity] = []
+        self.is_main: bool = is_main
+        self.is_visible: bool = is_visible
+        self.is_other: bool = is_other
 
     def add(self, *entities: list[Entity]):
         for entity in entities:
@@ -223,8 +244,14 @@ class Layer:
             )
             entity.texture.draw(
                 dstrect=(
-                    entity.transform.position.x - size_x // 2 - Camera.position.x+Window.center.x,
-                    entity.transform.position.y - size_y // 2 - Camera.position.y+Window.center.y,
+                    entity.transform.position.x
+                    - size_x // 2
+                    - Camera.position.x
+                    + Window.center.x,
+                    entity.transform.position.y
+                    - size_y // 2
+                    - Camera.position.y
+                    + Window.center.y,
                     size_x,
                     size_y,
                 ),
@@ -251,45 +278,52 @@ class SceneConfig:
 class Scene:
     def __init__(self, _id):
         self._id = _id + 1
-        self.has_config: bool = False
+        self._has_config: bool = False
 
     def config(self, config: SceneConfig):
-        if self.has_config:
+        if self._has_config:
             return False
         self.skybox_color: str = config.skybox_color
 
         self.layers: dict[str, Layer] = {}
-        self.visible_layers: dict[str, Layer] = {}
-        self.other_layers: dict[str, Layer] = {}
-        self.main_layers: dict[str, Layer] = {}
-        for name in ["all", "updates", "event-handler", "quit-handler", "rendering"]:
-            layer = Layer(name)
+        self._visible_layers: dict[str, Layer] = {}
+        self._other_layers: dict[str, Layer] = {}
+        self._main_layers: dict[str, Layer] = {}
+        for name in [
+            "all",
+            "updates",
+            "event-handler",
+            "quit-handler",
+            "rendering",
+            "ignore-cast",
+        ]:
+            layer = Layer(name, is_main=True)
             self.layers[name] = layer
-            self.main_layers[name] = layer
+            self._main_layers[name] = layer
         for name in config.visible_layer_names:
-            layer = Layer(name)
+            layer = Layer(name, is_visible=True)
             self.layers[name] = layer
-            self.visible_layers[name] = layer
+            self._visible_layers[name] = layer
         for name in config.other_layer_names:
-            layer = Layer(name)
+            layer = Layer(name, is_other=True)
             self.layers[name] = layer
-            self.other_layers[name] = layer
+            self._other_layers[name] = layer
 
         self.tags: dict[str, list[Entity]] = {}
         for tag in config.tags:
             self.tags[tag] = []
 
-        self.has_config = True
+        self._has_config = True
         return True
 
     def get_by_tag(self, tag: str) -> list[Entity]:
         return self.tags[tag]
 
     def update(self):
-        self.main_layers["updates"].update()
+        self._main_layers["updates"].update()
 
     def event(self, event: pygame.event.Event):
-        self.main_layers["event-handler"].event(event)
+        self._main_layers["event-handler"].event(event)
 
     def unload(self):
         for layer in list(self.layers.values()):
@@ -298,14 +332,14 @@ class Scene:
         del self
 
     def draw(self):
-        for layer in self.visible_layers.values():
+        for layer in self._visible_layers.values():
             layer.draw()
 
     def on_quit(self):
-        self.main_layers["quit-handler"].on_quit()
+        self._main_layers["quit-handler"].on_quit()
 
     def render(self):
-        self.main_layers["rendering"].render()
+        self._main_layers["rendering"].render()
 
 
 class Scenes:

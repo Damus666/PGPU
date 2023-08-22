@@ -4,9 +4,11 @@ from typing import Callable
 
 
 class Timer:
-    def __init__(self, cooldown: int, callback:Callable=None, start_active: bool = True):
+    def __init__(
+        self, cooldown: int, callback: Callable = None, start_active: bool = True
+    ):
         self.cooldown: int = cooldown
-        self.callback:Callable = callback
+        self.callback: Callable = callback
         self.active: bool = False
         self._start_time: int = -1
         if start_active:
@@ -41,6 +43,7 @@ class Time:
     framerate: float = 0
     time_scale: float = 1
     frame_count: int = 0
+
     _timers: dict[str, Timer] = dict()
     _invokes: list = []
 
@@ -72,7 +75,7 @@ class Time:
         return pygame.time.delay(milliseconds)
 
     @classmethod
-    def invoke(cls, function:Callable, time_ms: int, name: str = None):
+    def invoke(cls, function: Callable, time_ms: int, name: str = None):
         cls._invokes.append((function, time_ms, cls.ticks, name))
 
     @classmethod
@@ -90,7 +93,7 @@ class Time:
         cls,
         name: str,
         cooldown: int,
-        callback:Callable=None,
+        callback: Callable = None,
         start_active: bool = True,
         auto_update: bool = True,
     ) -> Timer:

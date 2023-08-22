@@ -1,4 +1,4 @@
-import psutil, sys, pygame
+import psutil, sys, pygame, screeninfo
 
 
 def exit(code: str):
@@ -37,15 +37,16 @@ def pid_exists(pid: int):
 def process_iter():
     return psutil.process_iter()
 
-
-def get_process():
-    return process
-
-
 def new_process(pid: int = None):
     return psutil.Process(pid)
 
 
-process: psutil.Process = psutil.Process()
-DISK_PARTITIONS = psutil.disk_partitions()
-ALL_DISK_PARTITIONS = psutil.disk_partitions(True)
+PROCESS: psutil.Process = psutil.Process()
+DISK_PARTITIONS:list[psutil._common.sdiskpart] = psutil.disk_partitions()
+ALL_DISK_PARTITIONS:list[psutil._common.sdiskpart] = psutil.disk_partitions(True)
+
+MONITORS:list[screeninfo.Monitor] = screeninfo.get_monitors()
+PRIMARY_MONITOR:screeninfo.Monitor
+for monitor in MONITORS:
+    if monitor.is_primary: PRIMARY_MONITOR = monitor
+SCREEN_RESOLUTION = pygame.Vector2(PRIMARY_MONITOR.width, PRIMARY_MONITOR.height)

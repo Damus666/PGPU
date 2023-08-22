@@ -3,6 +3,7 @@ import pygame._sdl2 as pgsdl
 from typing import Callable
 from ..core.time import Time
 from ..utils import Vectorizable
+from .. import core
 
 if typing.TYPE_CHECKING:
     from ..component.scene import Entity
@@ -14,7 +15,7 @@ class Component:
     unique: bool = False
 
     def __init__(self, entity: "Entity"):
-        self.entity: "Entity"|"RigidbodyEntity" = entity
+        self.entity: "Entity" | "RigidbodyEntity" = entity
         self.transform = self.entity.transform
         self.id = self.entity.scene._id
         self.entity.scene._id += 1
@@ -40,21 +41,21 @@ class Component:
     def render(self):
         ...
 
-    def destroy_after(self, time_ms:int):
+    def destroy_after(self, time_ms: int):
         Time.invoke(self.destroy, time_ms, f"{self.__str__()}_Destroy")
 
     def destroy(self):
-        for comp_name, (single, multiple) in list(self.entity.components.items()):
+        for comp_name, (single, multiple) in list(self.entity._components.items()):
             if single is self:
-                del self.entity.components[comp_name]
+                del self.entity._components[comp_name]
             else:
                 if self in multiple:
-                    self.entity.components[comp_name][1].remove(self)
-                    if len(self.entity.components[comp_name][1]) == 1:
-                        self.entity.components[comp_name][0] = self.entity.components[
+                    self.entity._components[comp_name][1].remove(self)
+                    if len(self.entity._components[comp_name][1]) == 1:
+                        self.entity._components[comp_name][0] = self.entity._components[
                             comp_name
                         ][1][0]
-                        self.entity.components[comp_name][1] = []
+                        self.entity._components[comp_name][1] = []
         del self
 
 
@@ -124,36 +125,57 @@ class StatusAnimator(Animator):
             self.textures = self.animations[self.status]
             return True
         return False
-    
+
+
 class Collider(Component):
     def init(self):
-        self.rigidbody:"RigidbodyEntity" = self.entity
-        self.size = pygame.Vector2(10,10)
-        self.offset = pygame.Vector2(0,0)
-        self.box = pygame.FRect((0,0), self.size)
-        self.is_trigger:bool = False
-        self.box.center = self.entity.transform.position+self.offset
+        self.rigidbody: "RigidbodyEntity" = self.entity
+        self.size = pygame.Vector2(10, 10)
+        self.offset = pygame.Vector2(0, 0)
+        self.box = pygame.FRect((0, 0), self.size)
+        self.is_trigger: bool = False
+        self.box.center = self.entity.transform.position + self.offset
         self._old_box = self.box.copy()
 
-    def setup(self, size:Vectorizable=None, offset:Vectorizable=None, is_trigger:bool=False):
-        self.rigidbody:"RigidbodyEntity" = self.entity
-        self.size = pygame.Vector2(10,10) if size is None else pygame.Vector2(size)
-        self.offset = pygame.Vector2(0,0) if offset is None else pygame.Vector2(offset)
-        self.box = pygame.FRect((0,0), self.size)
-        self.is_trigger:bool = is_trigger
-        self.box.center = self.transform.position+self.offset
+    def setup(
+        self,
+        size: Vectorizable = None,
+        offset: Vectorizable = None,
+        is_trigger: bool = False,
+    ):
+        self.rigidbody: "RigidbodyEntity" = self.entity
+        self.size = pygame.Vector2(10, 10) if size is None else pygame.Vector2(size)
+        self.offset = pygame.Vector2(0, 0) if offset is None else pygame.Vector2(offset)
+        self.box = pygame.FRect((0, 0), self.size)
+        self.is_trigger: bool = is_trigger
+        self.box.center = self.transform.position + self.offset
         self._old_box = self.box.copy()
 
-    def change_size(self, size:Vectorizable):
+    def change_size(self, size: Vectorizable):
         self.size = pygame.Vector2(size)
         self.box.size = self.size
-        self.box.center = self.transform.position+self.offset
+        self.box.center = self.transform.position + self.offset
 
     def _update_old(self):
-        if Time.ticks % 20 != 0: return
+        if Time.ticks % 20 != 0:
+            return
         self._old_box.size = self.box.size
         self._old_box.center = self.box.center
 
     def destroy(self):
-        if self in self.entity._colliders: self.entity._colliders.remove(self)
+        if self in self.entity._colliders:
+            self.entity._colliders.remove(self)
+        return super().destroy()
+
+
+class CastTarget(Component):
+    def init(self):
+        self.cast_layer: str = "default"
+        core.physics._Physics._register_target(self)
+
+    def setup(self, cast_layer: str):
+        self.cast_layer: str = cast_layer
+
+    def destroy(self):
+        core.physics._Physics._destroyed_target(self)
         return super().destroy()

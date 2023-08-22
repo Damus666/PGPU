@@ -2,7 +2,7 @@ from pgpu import *
 
 
 class const:
-    amount = 50
+    amount = 40
     speed = 300
     anim_speed = 6
 
@@ -23,17 +23,17 @@ class Manager(Component):
 
     def update(self):
         Window.window.title = f"{Time.framerate:.0f}"
-        Camera.position = self.transform.position - Window.center
+        Camera.position = self.transform.position
 
         self.transform.position += (
             vector(Input.get_axis("horizontal"), Input.get_axis("vertical"))
             * self.speed
             * Time.delta_time
         )
-
+    
     def render(self):
-        render.fill_rect((10, 10, 300, 100), Color(30, 67, 156))
-
+        render.project_line((-100,0), (100,0), pygame.Color("green"))
+        render.project_rect(pygame.Rect(0,0,200,200), pygame.Color("yellow"))
 
 class ManagerEntity(Entity):
     start_components = [Manager, Animator]

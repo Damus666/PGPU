@@ -3,13 +3,13 @@ from .scene import Entity
 from .components import Collider
 from .transform import Transform
 import pygame._sdl2 as pgsdl
-from ..core.physics import Physics
+from ..core.physics import _Physics
 from ..core.time import Time
 from ..utils import Vectorizable
 
 
 class RigidbodyCallbacks:
-    default: "RigidbodyCallbacks"
+    default: "RigidbodyCallbacks" = None
 
     def __init__(self, rigidbody):
         self.rigidbody = rigidbody
@@ -60,12 +60,12 @@ class RigidbodyEntity(Entity):
         self.speed: pygame.Vector2 = pygame.Vector2()
         self.is_static: bool = is_static
         self.gravity_scale: float = gravity_scale
-        Physics._register(self)
+        _Physics._register(self)
 
         self._super_entity.__init__(transform, layer_names, texture, tags)
 
     def destroy(self):
-        Physics._destroyed(self)
+        _Physics._destroyed(self)
         self._super_entity.destroy()
 
     def update(self):
@@ -88,7 +88,7 @@ class RigidbodyEntity(Entity):
 
     def _collisions(self, direction):
         for collider in self._colliders:
-            for body in Physics._rigidbodies:
+            for body in _Physics._rigidbodies:
                 if body is self:
                     continue
                 for other in body._colliders:

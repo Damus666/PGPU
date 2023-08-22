@@ -1,5 +1,5 @@
 import pygame
-from typing import Sequence
+from typing import Sequence, Iterable
 
 
 class classproperty(property):
@@ -11,6 +11,7 @@ class classproperty(property):
 
 
 Coordinate = pygame.Vector2 | Sequence[float]
+Point = Iterable[int]
 Vectorizable = str | float | Sequence[float] | pygame.Vector2
 
 

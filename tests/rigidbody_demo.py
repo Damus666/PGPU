@@ -9,9 +9,10 @@ class Player(Component):
 
     def update(self):
         self.entity.speed += (
-            vector(Input.get_axis("horizontal"), Input.get_axis("vertical")) * 0.5
+            vector(Input.get_axis("horizontal"), Input.get_axis("vertical")) * 0.2
         )
         Camera.position = self.transform.position
+        Window.window.title = f"{Time.framerate:.2f}"
 
     def render(self):
         render.project_rect(self.main_collider._old_box, Color("red"))
