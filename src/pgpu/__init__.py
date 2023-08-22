@@ -10,12 +10,12 @@ from .core.window import Window
 from .core import audio
 from .core.audio import Music
 from .extension import file
-from .extension import pjson
-from .extension import pmath
+from .extension import saving
+from .extension import mathf
 from .extension import rand
 from .extension import render
-from .extension.system import System
-import pygame, math, random
+from .extension import system
+import pygame, math, random, os
 import pygame._sdl2 as pgsdl
 from pygame._sdl2 import Texture, Image
 from pygame._sdl2 import Window as SDLWindow

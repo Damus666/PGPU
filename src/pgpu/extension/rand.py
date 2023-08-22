@@ -1,5 +1,5 @@
 import random, pygame
-from .pmath import inside_range
+from .mathf import inside_range
 
 
 def rand_sign() -> int:

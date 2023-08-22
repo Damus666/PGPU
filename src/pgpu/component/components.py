@@ -4,7 +4,7 @@ from typing import Callable
 from ..core.time import Time
 
 if typing.TYPE_CHECKING:
-    from component.scene import Entity
+    from ..component.scene import Entity
 
 
 class Component:
@@ -36,10 +36,21 @@ class Component:
     def render(self):
         ...
 
+    def destroy_after(self, time_ms:int):
+        Time.invoke(self.destroy, time_ms, f"{self.__str__()}_Destroy")
+
     def destroy(self):
-        for comp_name, comp in list(self.entity.components.items()):
-            if comp is self:
+        for comp_name, (single, multiple) in list(self.entity.components.items()):
+            if single is self:
                 del self.entity.components[comp_name]
+            else:
+                if self in multiple:
+                    self.entity.components[comp_name][1].remove(self)
+                    if len(self.entity.components[comp_name][1]) == 1:
+                        self.entity.components[comp_name][0] = self.entity.components[
+                            comp_name
+                        ][1][0]
+                        self.entity.components[comp_name][1] = []
         del self
 
 

@@ -40,15 +40,19 @@ class Entity:
         for tag in tags:
             self.add_tag(tag)
         # components
-        self.components: dict[str, Component] = {}
+        self.components: dict[str, list[Component | None, list[Component]]] = {}
         for comp in self.start_components:
             if isinstance(comp, list):
                 comp_name, comp_type = comp
             else:
                 comp_name, comp_type = comp.__name__, comp
-            self.components[comp_name] = comp_type(self)
-        for comp in list(self.components.values()):
-            comp.init()
+            self.add_component(comp_type, comp_name, False)
+        for single, multiple in list(self.components.values()):
+            if single is not None:
+                single.init()
+            else:
+                for c in multiple:
+                    c.init()
         # unique
         if self.unique:
             self.__class__.instance = self
@@ -70,11 +74,33 @@ class Entity:
     def has_tag(self, tag: str) -> bool:
         return tag in self.tags
 
-    def add_component(self, name: str, component_type: type[Component]) -> Component:
+    def add_component(
+        self, component_type: type[Component], name:str=None, init_component: bool = True
+    ) -> Component:
         comp = component_type(self)
-        self.components[name] = comp
-        comp.init()
+        if name is None: name = component_type.__name__
+
+        if name in self.components:
+            if self.components[name][0] is not None:
+                self.components[name][1].append(self.components[name][0])
+            self.components[name][1].append(comp)
+            self.components[name][0] = None
+        else:
+            self.components[name] = [comp, []]
+
+        if init_component:
+            comp.init()
         return comp
+
+    def get_component(self, name: str):
+        if name in self.components:
+            return self.components[name][0]
+        return None
+
+    def get_components(self, name: str):
+        if name in self.components:
+            return self.components[name][1]
+        return None
 
     def destroy(self):
         for tag in list(self.tags):
@@ -90,23 +116,39 @@ class Entity:
         return cls(Transform(), [], None)
 
     def render(self):
-        for comp in list(self.components.values()):
-            comp.render()
+        for single, multiple in list(self.components.values()):
+            if single is not None:
+                single.render()
+            else:
+                for comp in multiple:
+                    comp.render()
 
     def init(self):
         ...
 
     def update(self):
-        for comp in list(self.components.values()):
-            comp.update()
+        for single, multiple in list(self.components.values()):
+            if single is not None:
+                single.update()
+            else:
+                for comp in multiple:
+                    comp.update()
 
     def event(self, event: pygame.event.Event):
-        for comp in list(self.components.values()):
-            comp.event(event)
+        for single, multiple in list(self.components.values()):
+            if single is not None:
+                single.event(event)
+            else:
+                for comp in multiple:
+                    comp.event(event)
 
     def on_quit(self):
-        for comp in list(self.components.values()):
-            comp.on_quit()
+        for single, multiple in list(self.components.values()):
+            if single is not None:
+                single.on_quit()
+            else:
+                for comp in multiple:
+                    comp.on_quit()
 
 
 class Layer:

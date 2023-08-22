@@ -1,4 +1,5 @@
 import pygame
+from typing import Sequence
 
 
 class classproperty(property):
@@ -7,6 +8,10 @@ class classproperty(property):
 
     def __set__(self, obj, value, obj_type=None):
         self.fset(obj_type, value)
+
+
+Coordinate = pygame.Vector2 | Sequence[float]
+Vectorizable = str | float | Sequence[float] | pygame.Vector2
 
 
 _pygame_key_codes = [

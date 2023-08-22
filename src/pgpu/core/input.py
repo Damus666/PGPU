@@ -1,7 +1,7 @@
 import pygame
 from ..utils import _pygame_key_codes
 from .time import Time
-from ..extension.pmath import signof
+from ..extension.mathf import signof
 
 
 class InputAxis:

@@ -2,7 +2,6 @@ from .window import Window
 from .time import Time
 from .input import Input
 from ..component.scene import Scenes
-from ..extension.system import System
 import pygame, sys
 import pygame._sdl2 as pgsdl
 
@@ -16,7 +15,6 @@ class Application:
         accelerated: bool = True,
         input_elasticity: float = 1.5,
     ):
-        System._init()
         Window._init(sdl_window, accelerated)
         Time._init(target_fps)
         Input._init(input_elasticity)
