@@ -2,9 +2,11 @@ import typing, pygame
 import pygame._sdl2 as pgsdl
 from typing import Callable
 from ..core.time import Time
+from ..utils import Vectorizable
 
 if typing.TYPE_CHECKING:
     from ..component.scene import Entity
+    from ..component.entities import RigidbodyEntity
 
 
 class Component:
@@ -12,8 +14,10 @@ class Component:
     unique: bool = False
 
     def __init__(self, entity: "Entity"):
-        self.entity: "Entity" = entity
+        self.entity: "Entity"|"RigidbodyEntity" = entity
         self.transform = self.entity.transform
+        self.id = self.entity.scene._id
+        self.entity.scene._id += 1
         if self.unique:
             self.__class__.instance = self
             setattr(self.entity, self.__class__.__name__, self)
@@ -120,3 +124,36 @@ class StatusAnimator(Animator):
             self.textures = self.animations[self.status]
             return True
         return False
+    
+class Collider(Component):
+    def init(self):
+        self.rigidbody:"RigidbodyEntity" = self.entity
+        self.size = pygame.Vector2(10,10)
+        self.offset = pygame.Vector2(0,0)
+        self.box = pygame.FRect((0,0), self.size)
+        self.is_trigger:bool = False
+        self.box.center = self.entity.transform.position+self.offset
+        self._old_box = self.box.copy()
+
+    def setup(self, size:Vectorizable=None, offset:Vectorizable=None, is_trigger:bool=False):
+        self.rigidbody:"RigidbodyEntity" = self.entity
+        self.size = pygame.Vector2(10,10) if size is None else pygame.Vector2(size)
+        self.offset = pygame.Vector2(0,0) if offset is None else pygame.Vector2(offset)
+        self.box = pygame.FRect((0,0), self.size)
+        self.is_trigger:bool = is_trigger
+        self.box.center = self.transform.position+self.offset
+        self._old_box = self.box.copy()
+
+    def change_size(self, size:Vectorizable):
+        self.size = pygame.Vector2(size)
+        self.box.size = self.size
+        self.box.center = self.transform.position+self.offset
+
+    def _update_old(self):
+        if Time.ticks % 20 != 0: return
+        self._old_box.size = self.box.size
+        self._old_box.center = self.box.center
+
+    def destroy(self):
+        if self in self.entity._colliders: self.entity._colliders.remove(self)
+        return super().destroy()

@@ -3,6 +3,7 @@ from .transform import Transform
 from .components import Component
 import pygame._sdl2 as pgsdl
 from ..core.camera import Camera
+from ..core.window import Window
 from typing import Self, Callable
 
 
@@ -20,6 +21,8 @@ class Entity:
     ):
         # scene
         self.scene: Scene = Scenes.scene
+        self.id = self.scene._id
+        self.scene._id += 1
         # transform
         self.transform: Transform = transform
         # layers
@@ -32,8 +35,6 @@ class Entity:
         self.name: str = self.__class__.__name__
         # texture
         self.texture: pgsdl.Texture | None = texture
-        # box
-        self.box: pygame.Rect = self.texture.get_rect(center=self.transform.position)
         # tags
         self.tags: list[str] = []
         tags = tags if tags is not None else []
@@ -61,6 +62,15 @@ class Entity:
         self.init()
 
     # builtin
+    def in_layer(self, name: str) -> bool:
+        return name in self.layers
+
+    def add_layer(self, name: str):
+        self.scene.layers[name].add(self)
+
+    def remove_layer(self, name: str):
+        self.scene.layers[name].remove(self)
+
     def add_tag(self, tag: str):
         if tag in self.scene.tags:
             self.scene.tags[tag].append(self)
@@ -75,10 +85,14 @@ class Entity:
         return tag in self.tags
 
     def add_component(
-        self, component_type: type[Component], name:str=None, init_component: bool = True
+        self,
+        component_type: type[Component],
+        name: str = None,
+        init_component: bool = True,
     ) -> Component:
         comp = component_type(self)
-        if name is None: name = component_type.__name__
+        if name is None:
+            name = component_type.__name__
 
         if name in self.components:
             if self.components[name][0] is not None:
@@ -94,13 +108,21 @@ class Entity:
 
     def get_component(self, name: str):
         if name in self.components:
-            return self.components[name][0]
+            if self.components[name][0] is not None:
+                return self.components[name][0]
+            else:
+                return self.components[name][1][0]
         return None
 
     def get_components(self, name: str):
         if name in self.components:
-            return self.components[name][1]
+            if len(self.components[name][1]) > 1:
+                return self.components[name][1]
+            else: return [self.components[name][0]]
         return None
+    
+    def has_component(self, name:str):
+        return name in self.components
 
     def destroy(self):
         for tag in list(self.tags):
@@ -158,11 +180,15 @@ class Layer:
 
     def add(self, *entities: list[Entity]):
         for entity in entities:
+            if entity in self.entities:
+                continue
             entity.layers[self.name] = self
             self.entities.append(entity)
 
     def remove(self, *entities: list[Entity]):
         for entity in entities:
+            if entity not in self.entities:
+                continue
             del entity.layers[self.name]
             self.entities.remove(entity)
 
@@ -197,8 +223,8 @@ class Layer:
             )
             entity.texture.draw(
                 dstrect=(
-                    entity.transform.position.x - size_x // 2 - Camera.position.x,
-                    entity.transform.position.y - size_y // 2 - Camera.position.y,
+                    entity.transform.position.x - size_x // 2 - Camera.position.x+Window.center.x,
+                    entity.transform.position.y - size_y // 2 - Camera.position.y+Window.center.y,
                     size_x,
                     size_y,
                 ),
@@ -223,7 +249,8 @@ class SceneConfig:
 
 
 class Scene:
-    def __init__(self):
+    def __init__(self, _id):
+        self._id = _id + 1
         self.has_config: bool = False
 
     def config(self, config: SceneConfig):
@@ -286,8 +313,10 @@ class Scenes:
 
     @classmethod
     def new_scene(cls, config: SceneConfig) -> Scene:
+        old_id = 0
         if cls.scene:
+            old_id = cls.scene._id
             cls.scene.unload()
-        cls.scene = Scene()
+        cls.scene = Scene(old_id)
         cls.scene.config(config)
         return cls.scene
