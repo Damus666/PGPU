@@ -2,9 +2,17 @@ from pgpu import *
 
 
 class const:
-    amount = 30
+    amount = 50
     speed = 300
     anim_speed = 6
+
+
+class AssetLoader:
+    assets = {}
+
+    @classmethod
+    def load(cls):
+        cls.assets["grass"] = graphics.load("tests/grass.png", 1)
 
 
 class Manager(Component):
@@ -34,7 +42,7 @@ class ManagerEntity(Entity):
     def init(self):
         self.Animator.setup(
             [
-                Graphics.empty_texture(color=col)
+                graphics.empty_texture(color=col)
                 for col in ["green", "red", "blue", "purple"]
             ],
             const.anim_speed,
@@ -45,7 +53,7 @@ class ManagerEntity(Entity):
         return ManagerEntity(
             Transform(),
             ["updates", "event-handler", "quit-handler", "visible-top", "rendering"],
-            Graphics.empty_texture(color="green"),
+            AssetLoader.assets["grass"],
         )
 
 
@@ -65,12 +73,12 @@ class ParticleEntity(Entity):
                 (random.uniform(0.5, 2.0), random.uniform(1.0, 2.0)),
             ),
             ["visible-main", "updates"],
-            Graphics.empty_texture((10, 10), Graphics.random_color()),
+            graphics.empty_texture((10, 10), graphics.random_color()),
         )
 
 
 def main_scene():
-    Scenes.new_scene(SceneConfig("blue", ["visible-main", "visible-top"]))
+    Scenes.new_scene(SceneConfig((0, 0, 150), ["visible-main", "visible-top"]))
     ManagerEntity.instantiate()
     amount = const.amount
     spacing = Window.bounds.w // amount
@@ -82,5 +90,6 @@ def main_scene():
 
 
 Application.init(SDLWindow("Test", (1000, 650)))
+AssetLoader.load()
 main_scene()
 Application.run()

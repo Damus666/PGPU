@@ -1,6 +1,197 @@
-import pygame, math, random
+import pygame, math, random, os
 import pygame._sdl2 as pgsdl
 from .window import Window
+
+
+class Asset:
+    def __init__(
+        self, surface: pygame.Surface, texture: pgsdl.Texture = None, name: str = None
+    ):
+        self.name: str = name if name is not None else "Unnamed Asset"
+        self.surface: pygame.Surface = surface
+        self.texture: pgsdl.Texture = (
+            texture
+            if texture is not None
+            else pgsdl.Texture.from_surface(Window.renderer, self.surface)
+        )
+
+
+class AssetList:
+    def __init__(self, assets: list[Asset] = None):
+        self.assets: list[Asset] = [] if assets is None else assets.copy()
+
+    def add(
+        self, surface: pygame.Surface, texture: pgsdl.Texture = None, name: str = None
+    ) -> Asset:
+        asset = Asset(surface, texture, name)
+        self.assets.append(asset)
+        return asset
+
+    def add_asset(self, asset: Asset):
+        self.assets.append(asset)
+
+    def textures(self) -> list[pgsdl.Texture]:
+        return [asset.texture for asset in self.assets]
+
+    def surfaces(self) -> list[pygame.Surface]:
+        return [asset.surface for asset in self.assets]
+
+
+class AssetDict:
+    def __init__(self, assets: list[Asset] = None):
+        self.assets: dict[str, Asset] = {}
+        assets = assets if assets is not None else []
+        for asset in assets:
+            self.assets[asset.name] = asset
+
+    def add(
+        self, surface: pygame.Surface, texture: pgsdl.Texture = None, name: str = None
+    ) -> Asset:
+        asset = Asset(surface, texture, name)
+        self.assets[asset.name] = asset
+        return asset
+
+    def add_asset(self, asset: Asset):
+        self.assets[asset.name] = asset
+
+    def textures(self) -> list[pgsdl.Texture]:
+        return [asset.texture for asset in self.assets.values()]
+
+    def surfaces(self) -> list[pygame.Surface]:
+        return [asset.surface for asset in self.assets.values()]
+
+
+def load(path: str, scale_factor: float | tuple[float, float] = 1) -> pgsdl.Texture:
+    return pgsdl.Texture.from_surface(
+        Window.renderer,
+        pygame.transform.scale_by(pygame.image.load(path), scale_factor),
+    )
+
+
+def load_cached(
+    path: str, scale_factor: float | tuple[float, float] = 1
+) -> list[pgsdl.Texture, pygame.Surface]:
+    surf = pygame.transform.scale_by(pygame.image.load(path), scale_factor)
+    return [pgsdl.Texture.from_surface(Window.renderer, surf), surf]
+
+
+def load_asset(
+    path: str, scale_factor: float | tuple[float, float], name: str = None
+) -> Asset:
+    return Asset(
+        pygame.transform.scale_by(pygame.image.load(path), scale_factor), None, name
+    )
+
+
+def load_list(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> list[pgsdl.Texture]:
+    texs = []
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                tex = pgsdl.Texture.from_surface(
+                    Window.renderer,
+                    pygame.transform.scale_by(
+                        pygame.image.load(folder_path + "/" + image), scale_factor
+                    ),
+                )
+                texs.append(tex)
+            except:
+                pass
+    return texs
+
+
+def load_cached_list(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> list[list[pgsdl.Texture, pygame.Surface]]:
+    texs = []
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                surf = pygame.transform.scale_by(
+                    pygame.image.load(folder_path + "/" + image), scale_factor
+                )
+                tex = pgsdl.Texture.from_surface(Window.renderer, surf)
+                texs.append([tex, surf])
+            except:
+                pass
+    return texs
+
+
+def load_asset_list(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> AssetList:
+    asset_list = AssetList()
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                asset_list.add(
+                    Window.renderer,
+                    pygame.transform.scale_by(
+                        pygame.image.load(folder_path + "/" + image), scale_factor
+                    ),
+                    None,
+                    image.split(".")[0],
+                )
+            except:
+                pass
+    return asset_list
+
+
+def load_dict(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> dict[str, pgsdl.Texture]:
+    texs = {}
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                tex = pgsdl.Texture.from_surface(
+                    Window.renderer,
+                    pygame.transform.scale_by(
+                        pygame.image.load(folder_path + "/" + image), scale_factor
+                    ),
+                )
+                texs[image.split(".")[0]] = tex
+            except:
+                pass
+    return texs
+
+
+def load_cached_dict(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> dict[str, list[pgsdl.Texture, pygame.Surface]]:
+    texs = {}
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                surf = pygame.transform.scale_by(
+                    pygame.image.load(folder_path + "/" + image), scale_factor
+                )
+                tex = pgsdl.Texture.from_surface(Window.renderer, surf)
+                texs[image.split(".")[0]] = [tex, surf]
+            except:
+                pass
+    return texs
+
+
+def load_asset_dict(
+    folder_path: str, scale_factor: float | tuple[float, float] = 1
+) -> AssetDict:
+    asset_dict = AssetDict()
+    for image in os.listdir(folder_path):
+        if "." in image:
+            try:
+                AssetDict.add(
+                    pygame.transform.scale_by(
+                        pygame.image.load(folder_path + "/" + image), scale_factor
+                    ),
+                    None,
+                    image.split(".")[0],
+                )
+            except:
+                pass
+    return asset_dict
 
 
 def empty_texture(
@@ -16,9 +207,12 @@ def from_surface(surface: pygame.Surface) -> pgsdl.Texture:
     return pgsdl.Texture.from_surface(Window.renderer, surface)
 
 
-def random_color() -> pygame.Color:
+def random_color(rand_alpha: bool = False) -> pygame.Color:
     return pygame.Color(
-        random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+        random.randint(0, 255),
+        random.randint(0, 255),
+        random.randint(0, 255),
+        random.randint(0, 255) if rand_alpha else 255,
     )
 
 

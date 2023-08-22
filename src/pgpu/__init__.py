@@ -3,10 +3,12 @@ from .component.scene import Scene, Scenes, SceneConfig, Entity, Layer
 from .component.transform import Transform
 from .core.application import Application
 from .core.camera import Camera
-from .core import graphics as Graphics
+from .core import graphics
 from .core.input import Input
 from .core.time import Time
 from .core.window import Window
+from .core import audio
+from .core.audio import Music
 from .extension import file
 from .extension import pjson
 from .extension import pmath
