@@ -20,6 +20,7 @@ from .extension import mathf
 from .extension import rand
 from .extension import render
 from .extension import system
+from .extension import color
 
 import pygame, math, random, os
 import pygame._sdl2 as pgsdl

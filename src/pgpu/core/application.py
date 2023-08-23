@@ -15,6 +15,7 @@ class Application:
         accelerated: bool = True,
         input_elasticity: float = 1.5,
     ):
+        pygame.init()
         Window._init(sdl_window, accelerated)
         Time._init(target_fps)
         Input._init(input_elasticity)

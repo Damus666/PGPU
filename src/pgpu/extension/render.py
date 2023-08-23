@@ -1,10 +1,10 @@
 from ..core.window import Window
 from ..core.camera import Camera
-from ..utils import Vectorizable, Point
+from ..utils import Vectorizable, Point, RectValue
 import pygame
 
 
-def rect(rect, color: pygame.Color):
+def rect(rect:RectValue, color: pygame.Color):
     Window.renderer.draw_color = color
     Window.renderer.draw_rect(rect)
 
@@ -16,7 +16,7 @@ def project_rect(rect: pygame.Rect, color: pygame.Color):
     Window.renderer.draw_rect(rect)
 
 
-def fill_rect(rect, color: pygame.Color):
+def fill_rect(rect:RectValue, color: pygame.Color):
     Window.renderer.draw_color = color
     Window.renderer.fill_rect(rect)
 

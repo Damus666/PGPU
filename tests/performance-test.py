@@ -2,9 +2,10 @@ from pgpu import *
 
 
 class const:
-    amount = 40
+    amount = 100
     speed = 300
     anim_speed = 6
+    textures:list[Texture] = None
 
 
 class AssetLoader:
@@ -41,17 +42,14 @@ class ManagerEntity(Entity):
 
     def init(self):
         self.Animator.setup(
-            [
-                graphics.empty_texture(color=col)
-                for col in ["green", "red", "blue", "purple"]
-            ],
+            const.textures,
             const.anim_speed,
         )
 
     @classmethod
     def instantiate(cls):
         return ManagerEntity(
-            Transform(),
+            Transform(scale=(10,10)),
             ["updates", "event-handler", "quit-handler", "visible-top", "rendering"],
             AssetLoader.assets["grass"],
         )
@@ -73,7 +71,7 @@ class ParticleEntity(Entity):
                 (random.uniform(0.5, 2.0), random.uniform(1.0, 2.0)),
             ),
             ["visible-main", "updates"],
-            graphics.empty_texture((10, 10), graphics.random_color()),
+            random.choice(const.textures),
         )
 
 
@@ -90,6 +88,7 @@ def main_scene():
 
 
 Application.init(SDLWindow("Test", (1000, 650)))
+const.textures = [graphics.box_texture((10,10), col) for col in color.colors()]
 AssetLoader.load()
 main_scene()
 Application.run()

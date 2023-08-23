@@ -10,9 +10,11 @@ class classproperty(property):
         self.fset(obj_type, value)
 
 
-Coordinate = pygame.Vector2 | Sequence[float]
+Coordinate = Sequence[float]
 Point = Iterable[int]
 Vectorizable = str | float | Sequence[float] | pygame.Vector2
+ColorValue = int| str| Sequence[int]
+RectValue = Sequence[float|Coordinate] | pygame.Rect | pygame.FRect
 
 
 _pygame_key_codes = [

@@ -1,6 +1,7 @@
 import pygame, math, random, os
 import pygame._sdl2 as pgsdl
 from .window import Window
+from ..utils import ColorValue
 
 
 class Asset:
@@ -193,8 +194,7 @@ def load_asset_dict(
                 pass
     return asset_dict
 
-
-def empty_texture(
+def box_texture(
     size: tuple[int, int] = (100, 100), color: str = "black"
 ) -> pgsdl.Texture:
     surf = pygame.Surface(size)
@@ -203,8 +203,28 @@ def empty_texture(
     return tex
 
 
+def circle_texture(radius: float, color, width: int = 0):
+    surf = pygame.Surface((int(radius * 2), int(radius * 2)), pygame.SRCALPHA)
+    surf.fill(0)
+    pygame.draw.circle(surf, color, (radius, radius), radius, width)
+    return pgsdl.Texture.from_surface(Window.renderer, surf)
+
+
 def from_surface(surface: pygame.Surface) -> pgsdl.Texture:
     return pgsdl.Texture.from_surface(Window.renderer, surface)
+
+
+def font_texture(
+    font: pygame.Font,
+    text: str | bytes | None,
+    antialas: bool,
+    color: ColorValue,
+    bgcolor: ColorValue = None,
+    wraplength: int = 0,
+):
+    return pgsdl.Texture.from_surface(
+        Window.renderer, font.render(text, antialas, color, bgcolor, wraplength)
+    )
 
 
 def random_color(rand_alpha: bool = False) -> pygame.Color:
@@ -226,8 +246,7 @@ def radial_surface(surface: pygame.Surface, erase_angle: float) -> pygame.Surfac
         for y in range(h):
             if surface.get_at((x, y)).a == 0:
                 continue
-            direction = pygame.Vector2(x, y) - center
-            if math.degrees(math.atan2(direction.x, -direction.y)) < erase_angle:
+            if (pygame.Vector2(x, y) - center).as_polar()[1] < erase_angle:
                 surface.set_at((x, y), (0, 0, 0, 0))
     return surface
 

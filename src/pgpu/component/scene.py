@@ -1,10 +1,12 @@
+from typing import Callable, Self
+
 import pygame
-from .transform import Transform
-from .components import Component
 import pygame._sdl2 as pgsdl
+
 from ..core.camera import Camera
 from ..core.window import Window
-from typing import Self, Callable
+from .components import Component
+from .transform import Transform
 
 
 class Entity:

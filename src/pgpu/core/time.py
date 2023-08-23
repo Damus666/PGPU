@@ -30,6 +30,12 @@ class Timer:
             if self.callback:
                 self.callback()
 
+    def time_passed(self):
+        return Time.ticks-self._start_time
+    
+    def time_left(self):
+        return self.cooldown-(Time.ticks-self._start_time)
+
     def has_finished(self) -> bool:
         return Time.ticks - self._start_time >= self.cooldown
 

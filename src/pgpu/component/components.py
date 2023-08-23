@@ -6,7 +6,7 @@ from ..utils import Vectorizable
 from .. import core
 
 if typing.TYPE_CHECKING:
-    from ..component.scene import Entity
+    from ..component.scene import Entity, Scene
     from ..component.entities import RigidbodyEntity
 
 
@@ -17,6 +17,7 @@ class Component:
     def __init__(self, entity: "Entity"):
         self.entity: "Entity" | "RigidbodyEntity" = entity
         self.transform = self.entity.transform
+        self.scene: "Scene" = self.entity.scene
         self.id = self.entity.scene._id
         self.entity.scene._id += 1
         if self.unique:
@@ -27,6 +28,9 @@ class Component:
         ...
 
     def init(self):
+        ...
+
+    def setup(self):
         ...
 
     def update(self):
