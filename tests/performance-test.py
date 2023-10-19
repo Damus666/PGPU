@@ -2,7 +2,7 @@ from pgpu import *
 
 
 class const:
-    amount = 100
+    amount = 60
     speed = 300
     anim_speed = 6
     textures:list[Texture] = None
@@ -87,7 +87,7 @@ def main_scene():
             )
 
 
-Application.init(SDLWindow("Test", (1000, 650)))
+Application.init(SDLWindow("Test", (1600, 900)))
 const.textures = [graphics.box_texture((10,10), col) for col in color.colors()]
 AssetLoader.load()
 main_scene()

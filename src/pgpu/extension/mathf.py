@@ -19,6 +19,7 @@ def smoothstep_lerp(start: float, end: float, t: float) -> float:
     t = t * t * (3 - 2 * t)
     return start + (end - start) * t
 
+
 def smootherstep_lerp(start: float, end: float, t: float) -> float:
     t = t * t * t * (t * (t * 6 - 15) + 10)
     return start + (end - start) * t

@@ -1,5 +1,4 @@
 from pgpu import *
-import menu_scene
 
 
 class Ball(Component):
@@ -154,7 +153,6 @@ class Manager(Component):
         self.after_score()
 
     def after_score(self):
-        self.reset_pos()
         self.gen_scores()
         self.restart_game()
 
@@ -174,10 +172,6 @@ class Manager(Component):
             midleft=Camera.project_point((self.e_score_txt.width, 0))
         )
 
-    def reset_pos(self):
-        self.scene.get_by_tag("player")[0].transform.position.y = 0
-        self.scene.get_by_tag("enemy")[0].transform.position.y = 0
-
     def render(self):
         render.project_filled_rect(self.line_rect, self.white)
         self.p_score_txt.draw(dstrect=self.p_score_rect)
@@ -188,7 +182,7 @@ class Manager(Component):
     def event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                menu_scene.menu_scene()
+                Scenes.call_scene_func("menu_scene")
 
     def update(self):
         if not self.can_update:
@@ -200,7 +194,7 @@ class Manager(Component):
             self.time_rect = self.time_txt.get_rect(
                 center=Camera.project_point((0, -Window.bounds.h // 4))
             )
-        Window.window.title = f"{Time.framerate:.0f}"
+        Window.window.title = f"{Time.framerate:.0f} FPS"
 
 
 class ManagerEntity(Entity):

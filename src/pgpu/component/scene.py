@@ -130,6 +130,7 @@ class Entity:
         return name in self._components
 
     def destroy(self):
+        self.on_destroy()
         for tag in list(self.tags):
             self.remove_tag(tag)
         for single, multiple in list(self._components.values()):
@@ -142,24 +143,16 @@ class Entity:
                     comp.destroy()
         for layer in list(self.layers.values()):
             layer.remove(self)
-
-    # overridable
-    @classmethod
-    def instantiate(cls) -> Self:
-        return cls(Transform(), [], None)
-
-    def render(self):
+            
+    def awake_components(self):
         for single, multiple in list(self._components.values()):
             if single is not None:
-                single.render()
+                single.awake()
             else:
                 for comp in multiple:
-                    comp.render()
-
-    def init(self):
-        ...
-
-    def update(self):
+                    comp.awake()
+                    
+    def update_components(self):
         self.box.center = self.transform.position
         self.box.size = (
             (
@@ -175,22 +168,53 @@ class Entity:
             else:
                 for comp in multiple:
                     comp.update()
-
-    def event(self, event: pygame.event.Event):
+                    
+    def event_components(self, event: pygame.event.Event):
         for single, multiple in list(self._components.values()):
             if single is not None:
                 single.event(event)
             else:
                 for comp in multiple:
                     comp.event(event)
-
-    def on_quit(self):
+                    
+    def on_quit_components(self):
         for single, multiple in list(self._components.values()):
             if single is not None:
                 single.on_quit()
             else:
                 for comp in multiple:
                     comp.on_quit()
+
+    # overridable
+    @classmethod
+    def instantiate(cls) -> Self:
+        return cls(Transform(), [], None)
+
+    def render(self):
+        for single, multiple in list(self._components.values()):
+            if single is not None:
+                single.render()
+            else:
+                for comp in multiple:
+                    comp.render()
+                    
+    def on_destroy(self):
+        ...
+
+    def init(self):
+        ...
+        
+    def awake(self):
+        ...
+                    
+    def update(self):
+        ...
+                    
+    def event(self, event: pygame.event.Event):
+        ...
+
+    def on_quit(self):
+        ...
 
 
 class Layer:
@@ -224,10 +248,12 @@ class Layer:
     def update(self):
         for entity in list(self.entities):
             entity.update()
+            entity.update_components()
 
     def event(self, event: pygame.event.Event):
         for entity in list(self.entities):
             entity.event(event)
+            entity.event_components(event)
 
     def sort(self, key: Callable[[Entity], bool]):
         self.entities = sorted(self.entities, key=key)
@@ -235,37 +261,45 @@ class Layer:
     def on_quit(self):
         for entity in list(self.entities):
             entity.on_quit()
+            entity.on_quit_components()
 
     def empty(self):
-        self.remove(*list(self.entities))
+        for entity in list(self.entities):
+            entity.destroy()
 
     def render(self):
         for entity in list(self.entities):
             entity.render()
+            
+    def awake(self):
+        for entity in list(self.entities):
+            entity.awake_components()
+            entity.awake()
 
     def draw(self):
         for entity in self.entities:
             if entity.texture is None:
                 continue
-            size_x, size_y = int(entity.texture.width * entity.transform.scale.x), int(
-                entity.texture.height * entity.transform.scale.y
+            transform, texture = entity.transform, entity.texture
+            size_x, size_y = int(texture.width * transform.scale.x), int(
+                texture.height * transform.scale.y
             )
-            entity.texture.draw(
+            texture.draw(
                 dstrect=(
-                    entity.transform.position.x
+                    transform.position.x
                     - size_x // 2
                     - Camera.position.x
                     + Window.center.x,
-                    entity.transform.position.y
+                    transform.position.y
                     - size_y // 2
                     - Camera.position.y
                     + Window.center.y,
                     size_x,
                     size_y,
                 ),
-                angle=entity.transform.rotation,
-                flip_x=entity.transform.flipx,
-                flip_y=entity.transform.flipy,
+                angle=transform.rotation,
+                flip_x=transform.flipx,
+                flip_y=transform.flipy,
             )
 
 
@@ -344,14 +378,19 @@ class Scene:
             layer.draw()
 
     def on_quit(self):
+        self._main_layers["all"].empty()
         self._main_layers["quit-handler"].on_quit()
 
     def render(self):
         self._main_layers["rendering"].render()
+        
+    def awake(self):
+        self._main_layers["all"].awake()
 
 
 class Scenes:
     scene: Scene = None
+    scene_funcs: dict[str, Callable] = {}
 
     @classmethod
     def new_scene(cls, config: SceneConfig) -> Scene:
@@ -362,3 +401,24 @@ class Scenes:
         cls.scene = Scene(old_id)
         cls.scene.config(config)
         return cls.scene
+    
+    @classmethod
+    def register_scene_func(cls, scene_func: Callable, name: str|None = None):
+        if name is None:
+            name = scene_func.__name__
+        cls.scene_funcs[name] = scene_func
+        
+    @classmethod
+    def register_scene_funcs(cls, *scene_funcs: Callable):
+        for func in scene_funcs: cls.register_scene_func(func)
+        
+    @classmethod
+    def get_scene_func(cls, name: str) -> Callable|None:
+        return cls.scene_funcs.get(name, None)
+    
+    @classmethod
+    def call_scene_func(cls, name: str) -> Callable|None:
+        scene_func = cls.scene_funcs.get(name, None)
+        if scene_func is not None:
+            scene_func()
+        return scene_func

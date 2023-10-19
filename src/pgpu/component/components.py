@@ -29,6 +29,9 @@ class Component:
 
     def init(self):
         ...
+        
+    def awake(self):
+        ...
 
     def setup(self):
         ...

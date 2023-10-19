@@ -1,7 +1,7 @@
 [project]
 name = "pgpu"
 description = "Pygame GPU Accelerated Engine"
-version = "0.0.1"
+version = "1.0"
 readme = "README.md"
 
 authors = [

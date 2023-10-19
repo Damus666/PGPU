@@ -13,11 +13,11 @@ class _Physics:
     _cast_targets: list["CastTarget"] = []
 
     @classmethod
-    def _register(cls, rigidbody: "RigidbodyEntity"):
+    def _register_body(cls, rigidbody: "RigidbodyEntity"):
         cls._rigidbodies.append(rigidbody)
 
     @classmethod
-    def _destroyed(cls, rigidbody: "RigidbodyEntity"):
+    def _destroyed_body(cls, rigidbody: "RigidbodyEntity"):
         if rigidbody in cls._rigidbodies:
             cls._rigidbodies.remove(rigidbody)
 

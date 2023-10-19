@@ -1,11 +1,4 @@
 {
     "python.analysis.typeCheckingMode": "off",
-    "editor.defaultFormatter": "mikoz.isort-formatter",
-    "[jsonc]": {
-        "editor.defaultFormatter": "vscode.json-language-features"
-    },
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-    },
-    "python.formatting.provider": "none"
+    "python.analysis.autoImportCompletions": true
 }

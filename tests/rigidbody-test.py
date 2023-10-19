@@ -11,6 +11,7 @@ class Player(Component):
         self.entity.speed += (
             vector(Input.get_axis("horizontal"), Input.get_axis("vertical")) * 0.2
         )
+        self.entity.speed.x += (-self.entity.speed.x*0.001)
         Camera.position = self.transform.position
         Window.window.title = f"{Time.framerate:.2f}"
 
@@ -39,7 +40,7 @@ class PlayerEntity(RigidbodyEntity):
         player = PlayerEntity(
             Transform(),
             ["visible-main", "updates", "rendering"],
-            graphics.empty_texture((100, 100), "green"),
+            graphics.box_texture((100, 100), "green"),
             ["player"],
             callbacks_type=PlayerHitCallbacks,
             is_static=False,
@@ -56,7 +57,7 @@ class ObstacleEntity(RigidbodyEntity):
         obstacle = ObstacleEntity(
             Transform(vector(-200, 0)),
             ["visible-main", "updates"],
-            graphics.empty_texture((200, 50), "red"),
+            graphics.box_texture((200, 50), "red"),
             is_static=False,
         )
         obstacle.add_collider((200, 50), (0, 0))
@@ -72,7 +73,7 @@ def main_scene():
     Scenes.new_scene(SceneConfig(tags=["player"]))
     PlayerEntity.instantiate()
     ObstacleEntity.instantiate()
-    ob = RigidbodyEntity(Transform(vector(-300,-300)), ["visible-main"], graphics.empty_texture((200,200), "pink"))
+    ob = RigidbodyEntity(Transform(vector(-300,-300)), ["visible-main"], graphics.box_texture((200,200), "pink"))
     ob.add_collider((200,200))
 
 

@@ -61,12 +61,12 @@ class RigidbodyEntity(Entity):
         self.speed: pygame.Vector2 = pygame.Vector2()
         self.is_static: bool = is_static
         self.gravity_scale: float = gravity_scale
-        _Physics._register(self)
+        _Physics._register_body(self)
 
         self._super_entity.__init__(transform, layer_names, texture, tags)
 
     def destroy(self):
-        _Physics._destroyed(self)
+        _Physics._destroyed_body(self)
         self._super_entity.destroy()
 
     def update(self):
@@ -85,7 +85,6 @@ class RigidbodyEntity(Entity):
             self._snap_colliders()
             self._collisions("v")
         self.acceleration = pygame.Vector2()
-        self._super_entity.update()
 
     def _collisions(self, direction):
         for collider in self._colliders:
